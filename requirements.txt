@@ -1,13 +1,32 @@
-# Core Dependencies
+###########################
+# Production Dependencies #
+###########################
+
+# For GUI and Visualization
 matplotlib==3.9.2
+
+# For terminal colors (optional but helpful for CLI/logs)
 colorama==0.4.6
 
-# Standard library modules (no install needed, included with Python):
-# - math
-# - re
-# - random
-# - string
-# - csv
-# - time
-# - os
-# - tkinter
+# Tkinter, math, re, csv, time, os, string, random
+# are part of the Python Standard Library and don't need installation.
+
+
+##################
+# Dev Dependencies
+##################
+
+# Code formatting and style checks
+black==24.8.0
+flake8==7.1.1
+isort==5.13.2
+
+# Type checking
+mypy==1.11.1
+
+# Testing framework
+pytest==8.3.3
+pytest-cov==5.0.0
+
+# Static analysis
+bandit==1.7.9
