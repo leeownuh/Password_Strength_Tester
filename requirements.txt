@@ -1,1 +1,13 @@
-colorama
+# Core Dependencies
+matplotlib==3.9.2
+colorama==0.4.6
+
+# Standard library modules (no install needed, included with Python):
+# - math
+# - re
+# - random
+# - string
+# - csv
+# - time
+# - os
+# - tkinter
