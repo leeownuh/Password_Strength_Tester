@@ -2,7 +2,6 @@
 """
 Professional Password Analyzer - All-in-one GUI tool
 Save as pro_password_tool.py and run: python pro_password_tool.py
-Requires: matplotlib (pip install matplotlib)
 """
 
 import math
@@ -167,7 +166,7 @@ def generate_improvements(password: str, count=5):
     while len(suggestions) < count:
         suggestions.append(generate_password(length=16, use_symbols=True))
     return suggestions
--
+
 def generate_password(length=16, use_symbols=True):
     chars = string.ascii_lowercase + string.ascii_uppercase + string.digits
     if use_symbols:
@@ -205,15 +204,37 @@ class ProPassApp:
         self.update_theme()
 
     def _build_ui(self):
+        # === Main window split ===
         top = tk.Frame(self.root)
-        top.pack(fill=tk.X, padx=8, pady=6)
+        top.pack(fill=tk.BOTH, expand=True, padx=8, pady=6)
 
-        left = tk.Frame(top)
-        left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=6)
+        # ==== Scrollable LEFT section ====
+        left_container = tk.Frame(top)
+        left_container.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        canvas = tk.Canvas(left_container)
+        scrollbar = ttk.Scrollbar(left_container, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # ==== RIGHT section ====
         right = tk.Frame(top, width=300)
         right.pack(side=tk.RIGHT, fill=tk.Y, padx=6)
 
+        # Now replace all "left" references below with "scrollable_frame"
+        left = scrollable_frame
+
+        # ==== Existing widgets start here ====
         label_title = tk.Label(left, text="PROFESSIONAL PASSWORD ANALYZER", font=("Segoe UI", 16, "bold"))
         label_title.pack(anchor="w")
 
@@ -226,11 +247,10 @@ class ProPassApp:
 
         self.toggle_btn = tk.Button(entry_frame, text="Show", width=8, command=self.toggle_show)
         self.toggle_btn.pack(side=tk.LEFT, padx=4)
-
         copy_btn = tk.Button(entry_frame, text="Copy Results", command=self.copy_results)
         copy_btn.pack(side=tk.LEFT, padx=4)
 
-       
+
         btn_frame = tk.Frame(left)
         btn_frame.pack(fill=tk.X, pady=4)
         tk.Button(btn_frame, text="Check Now", command=self.update_analysis, bg="#2b7").pack(side=tk.LEFT, padx=4)
