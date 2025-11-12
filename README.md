@@ -1,6 +1,3 @@
-Got it 👍 — you’ve upgraded the script into a **professional GUI-based password analyzer**, but your README still describes the **old command-line version**.
-
-Here’s an updated **README** tailored for your new GUI version (`pro_password_tool.py`) — professional, formatted, and ready for GitHub:
 
 ---
 
@@ -107,6 +104,3 @@ ProPasswordAuditor/
 This project is distributed under the **MIT License**.
 You’re free to use, modify, and distribute this tool with proper attribution.
 
----
-
-Would you like me to also make a **GitHub-ready version** with badges (e.g., Python version, license, stars, repo size)?
