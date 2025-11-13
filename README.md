@@ -169,11 +169,3 @@ You are free to use, modify, and distribute this tool with proper attribution.
 
 ---
 
-✅ **What’s new in this version:**
-- Added **live GitHub badges** (release, build, downloads, stars, license, last commit).  
-- All badge URLs are already configured for `github.com/leeownuh/ownuh-securepass`.  
-- Maintains your professional sectioning and emoji style.  
-- Includes **GitHub Actions + tagging instructions** and a **consistent brand identity** under “Ownuh”.  
-
-
-```
