@@ -1,20 +1,18 @@
-name: Build and Release Ownuh SecurePass Analyzer
+name: Build and Release Ownuh SecurePass Analyzer (Windows Only)
 
 on:
   push:
     tags:
-      - "v*"   # e.g., v1.0.0
+      - "v*"   # Trigger on tags like v1.0.0
 
 permissions:
   contents: write
 
 jobs:
   build:
-    name: Build executables
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+    name: Build Windows Executable
+    runs-on: windows-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,28 +25,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
 
       - name: Build Ownuh SecurePass Analyzer
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            python -m pyinstaller --noconfirm --clean --onefile --windowed ^
-              --add-data "images/logo.png;images" ^
-              --icon=assets/app.ico ^
-              ownuh_securepass_analyzer.py
-          else
-            python3 -m pyinstaller --noconfirm --clean --onefile --windowed \
-              --add-data "images/logo.png:images" \
-              --icon=assets/app.ico \
-              ownuh_securepass_analyzer.py
-          fi
-        shell: bash
+          python -m pyinstaller --noconfirm --clean --onefile --windowed --add-data "images/logo.png;images" --icon=assets/app.ico ownuh_securepass_analyzer.py
+        shell: pwsh
 
-      - name: Upload artifact
+      - name: Upload Windows Executable
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-ownuh-securepass
+          name: windows-ownuh-securepass
           path: dist/
 
   release:
@@ -56,7 +44,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download build artifacts
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           path: dist
@@ -68,11 +56,7 @@ jobs:
           name: "Ownuh SecurePass Analyzer ${{ github.ref_name }}"
           body: |
             🔐 **Ownuh SecurePass Analyzer**
-            Smart password analysis and audit tool by Leona Kokerai.
-            Includes:
-            - Windows `.exe`
-            - macOS `.app`
-            - Linux binary
+            Windows executable built by Leona Kokerai.
           files: |
             dist/**/*
         env:
