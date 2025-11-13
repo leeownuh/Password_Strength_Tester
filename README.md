@@ -45,6 +45,10 @@ It combines **entropy-based scoring**, **pattern detection**, and **policy-drive
 * 🧰 **Clipboard Safety:** Optional timed clipboard clearing for enhanced privacy.
 
 ---
+## ▶️ Download
+
+Get the latest release here: [GitHub Releases](https://github.com/leeownuh/ownuh-securepass/releases)
+
 
 ## 🖥️ USAGE
 

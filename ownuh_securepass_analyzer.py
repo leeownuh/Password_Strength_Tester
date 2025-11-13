@@ -15,6 +15,19 @@ from tkinter import ttk, filedialog, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import hashlib
+import sys
+import os
+
+def resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for dev and PyInstaller."""
+    try:
+        # PyInstaller stores files in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 # optional dependency
 try:
@@ -286,14 +299,13 @@ def check_pwned(password: str) -> int:
 class ProPassApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Pro Password Auditor — Refactor + HIBP")
+        self.root.title("Pro Password Auditor")
         self.root.geometry("980x740")
         self.policy = DEFAULT_POLICY.copy()
         self.session_log: List[Dict] = []
         self.logo_img = None
         self._build_ui()
-        # try to auto-load a default logo if present
-        default_logo = os.path.join('images', 'logo.png')
+        default_logo = resource_path('images/logo.png')
         if os.path.exists(default_logo):
             try:
                 self.logo_img = tk.PhotoImage(file=default_logo)
@@ -643,6 +655,7 @@ def mask_password(pwd: str) -> str:
 
 def main():
     root = tk.Tk()
+    root.iconbitmap(resource_path("assets/app.ico"))
     app = ProPassApp(root)
     root.mainloop()
 
