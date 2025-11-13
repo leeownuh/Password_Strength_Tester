@@ -3,7 +3,7 @@ name: Build and Release Ownuh SecurePass Analyzer
 on:
   push:
     tags:
-      - "v*"   # e.g., v1.0.0
+      - "v*"  # e.g., v1.0.0
 
 permissions:
   contents: write
@@ -28,18 +28,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller -r requirements.txt
+          pip install -r requirements.txt pyinstaller
 
       - name: Build Ownuh SecurePass Analyzer
-        shell: bash
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cmd /c "pyinstaller --noconfirm --clean --onefile --windowed --add-data \"images\\logo.png;images\" --icon=assets\\app.ico ownuh_securepass_analyzer.py"
-          elif [[ "${{ runner.os }}" == "macos-latest" ]]; then
-            pyinstaller --noconfirm --clean --onefile --windowed --add-data "images/logo.png:images" --icon=assets/app.ico ownuh_securepass_analyzer.py
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            cmd.exe /c "python -m pyinstaller --noconfirm --clean --onefile --windowed ^
+              --add-data images\\logo.png;images ^
+              --icon assets\\app.ico ^
+              ownuh_securepass_analyzer.py"
           else
-            # Linux
-            pyinstaller --noconfirm --clean --onefile --windowed --add-data "images/logo.png:images" --icon=assets/app.ico ownuh_securepass_analyzer.py
+            python -m pyinstaller --noconfirm --clean --onefile --windowed \
+              --add-data "images/logo.png:images" \
+              --icon assets/app.ico \
+              ownuh_securepass_analyzer.py
           fi
 
       - name: Upload artifact
