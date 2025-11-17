@@ -19,9 +19,7 @@ import sys
 import os
 
 def resource_path(relative_path: str) -> str:
-    """Get absolute path to resource, works for dev and PyInstaller."""
     try:
-        # PyInstaller stores files in _MEIPASS
         base_path = sys._MEIPASS
     except AttributeError:
         base_path = os.path.abspath(".")
@@ -29,10 +27,10 @@ def resource_path(relative_path: str) -> str:
     return os.path.join(base_path, relative_path)
 
 
-# optional dependency
+
 try:
     import requests
-except Exception:  # pragma: no cover - UI will warn if requests missing at runtime
+except Exception:  
     requests = None
 
 # ------------------------- Logging ---------------------------------
@@ -43,7 +41,7 @@ logger = logging.getLogger("propass")
 LOWERCASE = r"[a-z]"
 UPPERCASE = r"[A-Z]"
 DIGITS = r"[0-9]"
-SYMBOLS = r"[^a-zA-Z0-9\s]"  # consider non-space non-alnum as symbol
+SYMBOLS = r"[^a-zA-Z0-9\s]"  
 
 COMMON_PASSWORDS = {
     "password", "123456", "123456789", "qwerty", "abc123", "111111", "letmein", "admin", "welcome"
@@ -58,19 +56,16 @@ DEFAULT_POLICY = {
     "require_digits": True,
     "require_symbols": False,
     "disallow_common": True,
-    # new option: whether to consult Have I Been Pwned
     "check_breach": False,
 }
 
-# Typical attacker guess rates (guesses/sec)
 GUESSES_PER_SEC = {
-    "online_throttled": 100.0,        # e.g., web login throttling
-    "online_unthrottled": 10000.0,    # optimistic
-    "offline_slow": 1e6,              # single GPU
-    "offline_fast": 1e10,             # large cluster / botnet
+    "online_throttled": 100.0,        
+    "online_unthrottled": 10000.0,    
+    "offline_slow": 1e6,             
+    "offline_fast": 1e10,             
 }
 
-# Have I Been Pwned settings
 HIBP_USER_AGENT = "ProPassApp - HaveIBeenPwnedCheck"
 HIBP_TIMEOUT = 6.0
 
@@ -94,7 +89,6 @@ def calculate_entropy(password: str) -> float:
     if not password:
         return 0.0
 
-    # Determine pool size by classes
     pool = 0
     if re.search(LOWERCASE, password):
         pool += 26
@@ -103,15 +97,12 @@ def calculate_entropy(password: str) -> float:
     if re.search(DIGITS, password):
         pool += 10
     if re.search(SYMBOLS, password):
-        # try to use the distinct symbol set used for a slightly better estimate
         syms = set(ch for ch in password if re.match(SYMBOLS, ch))
-        pool += max(10, len(syms))  # at least assume 10 possible symbols
+        pool += max(10, len(syms))  
 
-    # if pool still zero (e.g., only whitespace) fall back to unique chars
     if pool == 0:
         pool = len(set(password)) or 1
 
-    # guard: pool cannot exceed printable ascii
     pool = min(pool, 95)
 
     entropy = len(password) * math.log2(pool)
@@ -124,7 +115,7 @@ def classify_strength(entropy: float) -> Tuple[str, int]:
     """
     if entropy <= 0:
         return "Very Weak", 0
-    # smooth score: map 0-120 bits to 0-100
+    
     score = int(max(0, min(100, entropy / 1.2)))
 
     if entropy < 28:
@@ -146,7 +137,6 @@ def estimate_crack_time(entropy_bits: float, guesses_per_sec: float = GUESSES_PE
     if entropy_bits <= 0:
         return "Instant"
 
-    # average number of guesses is 2^(entropy-1)
     try:
         avg_guesses = 2 ** max(0, entropy_bits - 1)
     except OverflowError:
@@ -154,12 +144,11 @@ def estimate_crack_time(entropy_bits: float, guesses_per_sec: float = GUESSES_PE
 
     seconds = avg_guesses / max(1.0, guesses_per_sec)
 
-    # human-friendly formatting
     units = [("ms", 1e-3), ("sec", 1), ("min", 60), ("hr", 3600), ("day", 86400), ("year", 86400 * 365), ("k years", 86400 * 365 * 1000)]
     if seconds < 1:
         return f"{seconds*1000:.2f} ms"
     for name, thresh in units[1:]:
-        if seconds < thresh * 1000:  # some sensible cap
+        if seconds < thresh * 1000:  
             if name == "sec":
                 return f"{seconds:.2f} sec"
             elif name == "min":
@@ -325,13 +314,12 @@ class ProPassApp:
         main = ttk.Frame(self.root, padding=8)
         main.pack(fill=tk.BOTH, expand=True)
 
-        # Left (analysis) / Right (settings)
+        
         left = ttk.Frame(main)
         left.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         right = ttk.Frame(main, width=320)
         right.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Title area (logo moved to right side as requested)
         title_frame = ttk.Frame(left)
         title_frame.pack(anchor='w', fill=tk.X)
         title = ttk.Label(title_frame, text="PROFESSIONAL PASSWORD ANALYZER", font=(None, 14, 'bold'))
@@ -344,7 +332,6 @@ class ProPassApp:
         self.entry.pack(side=tk.LEFT, padx=6)
         self.entry.bind("<KeyRelease>", lambda e: self.update_analysis())
 
-        # Eye button (toggles show/hide) and keep a small Load Logo for convenience (logo primarily shown on right)
         eye_btn = ttk.Button(entry_row, text='👁', width=3, command=self._toggle_eye)
         eye_btn.pack(side=tk.LEFT)
         ttk.Button(entry_row, text="Load Logo", command=self._load_logo).pack(side=tk.LEFT, padx=4)
@@ -356,27 +343,23 @@ class ProPassApp:
         ttk.Button(btn_row, text="Generate Strong", command=self._generate_fill).pack(side=tk.LEFT, padx=3)
         ttk.Button(btn_row, text="Bulk Analyze File", command=self.bulk_analyze).pack(side=tk.LEFT, padx=3)
 
-        # Result summary
         self.result_var = tk.StringVar(value="No analysis yet.")
         result_box = ttk.LabelFrame(left, text="Summary")
         result_box.pack(fill=tk.X, pady=6)
         ttk.Label(result_box, textvariable=self.result_var).pack(anchor='w', padx=6, pady=6)
 
-        # Suggestions
         sug_frame = ttk.LabelFrame(left, text="Suggestions & Patterns")
         sug_frame.pack(fill=tk.BOTH, expand=True, pady=6)
         self.sug_text = tk.Text(sug_frame, height=8, wrap='word')
         self.sug_text.pack(fill=tk.BOTH, expand=True)
         self.sug_text.config(state=tk.DISABLED)
 
-        # Graph
         graph_frame = ttk.LabelFrame(left, text="Entropy Growth")
         graph_frame.pack(fill=tk.BOTH, expand=True)
         self.fig, self.ax = plt.subplots(figsize=(6, 2))
         self.canvas = FigureCanvasTkAgg(self.fig, master=graph_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-        # Right: logo on top -> policy -> alternatives -> history
         logo_frame = ttk.Frame(right)
         logo_frame.pack(fill=tk.X, pady=(0,6))
         self.logo_label = ttk.Label(logo_frame)
@@ -397,19 +380,17 @@ class ProPassApp:
         ttk.Checkbutton(pol, text='Require Symbols', variable=self.p_symbols).grid(row=4, column=0, columnspan=2, sticky='w')
         self.p_disallow_common = tk.BooleanVar(value=self.policy['disallow_common'])
         ttk.Checkbutton(pol, text='Disallow Common', variable=self.p_disallow_common).grid(row=5, column=0, columnspan=2, sticky='w')
-        # new: enable breach checking
+       
         self.p_check_breach = tk.BooleanVar(value=self.policy.get('check_breach', False))
         ttk.Checkbutton(pol, text='Check breaches (Have I Been Pwned)', variable=self.p_check_breach).grid(row=6, column=0, columnspan=2, sticky='w')
         ttk.Button(pol, text='Apply', command=self._apply_policy).grid(row=7, column=0, pady=6)
 
-        # Improved alternatives moved under policy (as requested)
         imp_frame_right = ttk.LabelFrame(right, text="Improved Alternatives (double-click to copy)")
         imp_frame_right.pack(fill=tk.X, pady=6)
         self.imp_list = tk.Listbox(imp_frame_right, height=6)
         self.imp_list.pack(fill=tk.X)
         self.imp_list.bind('<Double-Button-1>', self._copy_from_list)
 
-        # history
         hist = ttk.LabelFrame(right, text='Session History (masked)')
         hist.pack(fill=tk.BOTH, expand=True, pady=6)
         self.hist_list = tk.Listbox(hist, height=12)
@@ -432,7 +413,7 @@ class ProPassApp:
             return
         try:
             img = tk.PhotoImage(file=fname)
-            self.logo_img = img  # keep a reference
+            self.logo_img = img 
             self.logo_label.configure(image=img)
         except Exception as e:
             messagebox.showerror('Image error', f'Failed to load image: {e}')
@@ -448,7 +429,7 @@ class ProPassApp:
         if not sel:
             return
         pwd = self.imp_list.get(sel[0])
-        # Be cautious: copying raw passwords to clipboard is a sensitive action
+       
         if messagebox.askyesno('Copy password', 'Copy the suggested password to clipboard?'):
             self.root.clipboard_clear()
             self.root.clipboard_append(pwd)
@@ -470,12 +451,10 @@ class ProPassApp:
         pwd = self.entry.get()
         entropy = calculate_entropy(pwd)
         strength, score = classify_strength(entropy)
-        # choose reasonable attacker model for display
         crack = estimate_crack_time(entropy, guesses_per_sec=GUESSES_PER_SEC['offline_slow'])
         patterns = analyze_patterns(pwd)
         policy_issues = check_policy(pwd, self.policy)
 
-        # optionally check breach status (do this in a background thread to keep UI responsive)
         breach_info: Optional[int] = None
 
         def do_breach_check():
@@ -484,30 +463,21 @@ class ProPassApp:
                 breach_info = None
             else:
                 breach_info = check_pwned(pwd)
-            # update UI on main thread
             self.root.after(0, lambda: self._finish_analysis_ui(entropy, strength, score, crack, patterns, policy_issues, breach_info))
 
-        # start background breach check if enabled and password non-empty
         if self.policy.get('check_breach') and pwd:
             threading.Thread(target=do_breach_check, daemon=True).start()
-            # put a provisional result while the check runs
             self.result_var.set(f"Strength: {strength}   (score: {score}/100)\nEntropy: {entropy} bits\nEstimated crack time (offline slow): {crack}\nBreach check: running...")
         else:
-            # immediate UI update
             self._finish_analysis_ui(entropy, strength, score, crack, patterns, policy_issues, None)
 
-        # improvements list (moved to right; update contents there)
         self.imp_list.delete(0, tk.END)
         for s in generate_improvements(pwd, count=6):
             self.imp_list.insert(tk.END, s)
 
-        # session log entry will be recorded by _finish_analysis_ui when breach_info is known / not used
-
-        # update graph (do this immediately)
         self._update_graph(pwd)
 
     def _finish_analysis_ui(self, entropy, strength, score, crack, patterns, policy_issues, breach_info):
-        # build summary text
         summary = f"Strength: {strength}   (score: {score}/100)\nEntropy: {entropy} bits\nEstimated crack time (offline slow): {crack}"
         if breach_info is None:
             summary += "\nBreach check: disabled"
@@ -520,7 +490,6 @@ class ProPassApp:
 
         self.result_var.set(summary)
 
-        # suggestions
         self.sug_text.config(state=tk.NORMAL)
         self.sug_text.delete('1.0', tk.END)
         if policy_issues:
@@ -535,7 +504,6 @@ class ProPassApp:
             for p in patterns:
                 self.sug_text.insert(tk.END, ' • ' + p + '\n')
 
-        # class suggestions
         pwd = self.entry.get()
         if not re.search(LOWERCASE, pwd): self.sug_text.insert(tk.END, '\n• Add lowercase letters.\n')
         if not re.search(UPPERCASE, pwd): self.sug_text.insert(tk.END, '• Add uppercase letters.\n')
@@ -550,7 +518,6 @@ class ProPassApp:
 
         self.sug_text.config(state=tk.DISABLED)
 
-        # session log
         masked = mask_password(self.entry.get())
         ts = time.strftime('%Y-%m-%d %H:%M:%S')
         rec = {'time': ts, 'masked': masked, 'strength': strength, 'entropy': entropy}
